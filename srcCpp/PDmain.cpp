@@ -195,6 +195,33 @@ void appendMatToFile(string outputFile, vector<vector<double> > &distanceMat){
 	}
 }
 
+void readMatPart(string fileName,vector<vector<double> > &distanceMat){
+	std::ifstream ifs;
+	ifs.open(fileName.c_str());
+	if(ifs.peek() == std::ifstream::traits_type::eof()){
+		distanceMat.clear();
+		return;
+	}
+	unsigned int rows,columns;
+	ifs>>rows;
+	ifs>>columns;
+	distanceMat.resize(rows);
+	for (size_t i = 0; i < rows; ++i){
+		distanceMat[i].resize(columns);
+	}
+	double next;
+	for(size_t i = 0;i<rows;i++){
+		for(size_t j = 0;j<columns;j++){
+			ifs>>next;
+			distanceMat[i][j] = next;
+		}
+	}
+	ifs.close();
+	ifs.clear();
+}
+/*
+ *
+ */
 int getIndex(string fileName){
 	int slashIndex = fileName.find_last_of('\\');
 	string name = fileName.substr(slashIndex+1);
@@ -308,6 +335,120 @@ void getDistanceMatrixFixIndex(string filePath, string outputFile){
 	vector<string> filesFixIndex = getFixIndexFiles(files);
 	vector<vector<double> > distanceMat = computeDistanceMatrix(filesFixIndex);
 	printMat(outputFile,distanceMat);
+}
+
+/**
+ * compute distance matrix for file from startIdx to endIdx.
+ * and append result to the output file
+ */
+void getDistanceMatrixSumVersion(string filePath, string outputFile, int startIdx, int endIdx){
+	/*
+	 * get all the input file names with their path
+	 */
+	vector<string> files;
+	getFiles(filePath, "swc", files);
+	for(size_t i=0;i<files.size();i++){
+		cout<<files[i]<<endl;
+	}
+	//TODO compute distance matrix for file from startIdx to endIdx
+	vector<vector<double> > existMat; //this is the matrix containing previously computed distance
+	readMatPart(outputFile,existMat);
+	int existRows = existMat.size();
+	int existColumns = 0;
+	if(existRows>0){
+		existColumns = existMat[0].size();
+	}
+	vector<vector<double> > distanceMat;
+	int fileNum = endIdx<files.size()?endIdx-startIdx+1:files.size()-startIdx;
+	distanceMat.resize(fileNum+existRows);
+	for(unsigned int i=0;i<fileNum+existRows;i++){
+		distanceMat[i].resize(files.size());
+	}
+	for(unsigned int i=0;i<existRows;i++){
+		for(unsigned int j=0;j<existColumns;j++){
+			distanceMat[i][j] = existMat[i][j];
+		}
+	}
+
+	std::string fileName1, fileName2, fileResult = "data/dummyFile.txt";
+	double delta1, delta2;
+	vector<Point3D> vP;
+	for(unsigned int idx = 0;idx<fileNum;idx++){
+		int i = idx+startIdx;
+		cout<<"\n process ith file: "<<i<<endl;
+		for(unsigned int j = 0;j<files.size();j++){
+			//cout<<j<<" ";
+			if(existMat.size()>0&&j<existMat.size()&&i<existMat[0].size()){
+				distanceMat[idx+existRows][j] = existMat[j][idx+existRows];
+				continue;
+			}
+			fileName1 = files[i];
+			fileName2 = files[j];
+			delta1 = 0.1;
+			delta2 = 0.1;
+			std::ifstream ifs;
+			double x, y, z;
+			int i1, i2;
+			double d;
+			vP.clear();
+			ifs.open(fileName1.c_str());
+			int countP, countF;
+			//ifs.ignore(256, '\n');
+			ifs >> countP >> countF;
+			//ifs.ignore(256, '\n');
+			//reading first graph
+			while (countP--)
+			{
+				ifs >> x >> y >> z;
+				Point3D p;
+				p.x = x;
+				p.y = y;
+				p.z = z;
+				vP.push_back(p);
+			}
+			Graph ga(vP.size(), delta1, countF);
+			ga.setVP(vP);
+			while (countF--)
+			{
+				ifs >> i1 >> i2 >> d;
+	//			ga.addEdge(i1, i2, computePointDistance(vP[i1], vP[i2]));
+				ga.addEdge(i1, i2, d);
+			}
+			ifs.close();
+			ifs.clear();
+			//reading second graph
+			vP.clear();
+			ifs.open(fileName2.c_str());
+	//		ifs.ignore(256, '\n');
+			ifs >> countP >> countF;
+	//		ifs.ignore(256, '\n');
+			while (countP--)
+			{
+				ifs >> x >> y >> z;
+				Point3D p;
+				p.x = x;
+				p.y = y;
+				p.z = z;
+				vP.push_back(p);
+			}
+			Graph gb(vP.size(), delta2, countF);
+			gb.setVP(vP);
+			while (countF--)
+			{
+				ifs >> i1 >> i2 >> d;
+	//			gb.addEdge(i1, i2, computePointDistance(vP[i1], vP[i2]));
+				gb.addEdge(i1, i2, d);
+			}
+			ifs.close();
+			ifs.clear();
+			//computing persistence-distortion distance, this return the bottleneck distance
+			double result;
+			result = ga.computePersistenceDistortionDistance(gb, fileResult);
+			distanceMat[idx+existRows][j] = result;
+		}
+	}
+	printMat(outputFile,distanceMat);
+	//appendMatToFile(outputFile, distanceMat);
 }
 
 void getDistanceMatrix(string filePath, string outputFile){
@@ -790,80 +931,72 @@ void combineDistMatAddUp(string matFile1, string matFile2, string outputFile){
 
 int main(int argc, char **argv)
 {
-	cout<<"run max version"<<endl;
-	string euclideanFilePath = "data/ResearchData/Euclidean";
-	string outputFile = "data/output/euclideanDistanceMat_MaxXY.txt";
-	//getDistanceMatrix(euclideanFilePath,outputFile);
-	string geodesicFilePath = "data/ResearchData/Geodesic";
-	outputFile = "data/output/geodesicDistanceMat_MaxXY.txt";
-	//getDistanceMatrix(geodesicFilePath,outputFile);
+	bool maxVersion = true;
+	if(maxVersion){
+		cout<<"run max version"<<endl;
+		string euclideanFilePath = "data/ResearchData/Euclidean";
+		string outputFile = "data/output/euclideanDistanceMat_MaxXY.txt";
+		//getDistanceMatrix(euclideanFilePath,outputFile);
+		string geodesicFilePath = "data/ResearchData/Geodesic";
+		outputFile = "data/output/geodesicDistanceMat_MaxXY.txt";
+		//getDistanceMatrix(geodesicFilePath,outputFile);
 
-	string outputFileDiameter = "data/output/diameterDistMat.txt";
-	//getDiameterDistMat(euclideanFilePath, outputFileDiameter);
+		string outputFileDiameter = "data/output/diameterDistMat.txt";
+		//getDiameterDistMat(euclideanFilePath, outputFileDiameter);
 
 
-	string geodesicFile = "data/output/geodesicDistanceMat.txt";
-	string geodesicWeighted = "data/output/geodesicWeightedDistanceMat.txt";
-	string euclideanFile = "data/output/euclideanDistanceMat_MaxXY.txt";
-	string euclideanWeighted = "data/output/euclideanWeightedDistanceMat.txt";
-	//sortDistMatBasedGeodesic(geodesicFile, geodesicWeighted, euclideanFile, euclideanWeighted);
+		string geodesicFile = "data/output/geodesicDistanceMat.txt";
+		string geodesicWeighted = "data/output/geodesicWeightedDistanceMat.txt";
+		string euclideanFile = "data/output/euclideanDistanceMat_MaxXY.txt";
+		string euclideanWeighted = "data/output/euclideanWeightedDistanceMat.txt";
+		//sortDistMatBasedGeodesic(geodesicFile, geodesicWeighted, euclideanFile, euclideanWeighted);
 
-	string combineWeighted = "data/output/combineWeighted.txt";
-	//sortCombineDistMat(geodesicFile, euclideanFile, combineWeighted);
-	string combineGEMatWithoutSort = "data/output/combineGEMatNormalize_MaxXY.txt";
-	//combineGEDistMat(geodesicFile,euclideanFile,combineGEMatWithoutSort,geodesicFilePath,euclideanFilePath);
-	string diameterEuclideanMax = "data/output/combineDiameterEuclideanMax.txt";
-	//sortCombineDistMatTakeMax(outputFileDiameter, euclideanFile, diameterEuclideanMax);
+		string combineWeighted = "data/output/combineWeighted.txt";
+		//sortCombineDistMat(geodesicFile, euclideanFile, combineWeighted);
+		string combineGEMatWithoutSort = "data/output/combineGEMatNormalize_MaxXY.txt";
+		//combineGEDistMat(geodesicFile,euclideanFile,combineGEMatWithoutSort,geodesicFilePath,euclideanFilePath);
+		string diameterEuclideanMax = "data/output/combineDiameterEuclideanMax.txt";
+		//sortCombineDistMatTakeMax(outputFileDiameter, euclideanFile, diameterEuclideanMax);
 
-	string diameterEuclideanMaxWithoutSort = "data/output/combineDiameterEuclideanMaxWithoutSort_MaxXY.txt";
-	//combineDistMatTakeMax(outputFileDiameter,euclideanFile, diameterEuclideanMaxWithoutSort);
+		string diameterEuclideanMaxWithoutSort = "data/output/combineDiameterEuclideanMaxWithoutSort_MaxXY.txt";
+		//combineDistMatTakeMax(outputFileDiameter,euclideanFile, diameterEuclideanMaxWithoutSort);
 
-	//4 class neural trees//
-	string fourClassGeodesicPath = "data/ResearchData/FourClass/Geodesic";
-	string fourClassEuclideanPath = "data/ResearchData/FourClass/Euclidean";
-	string fourClassGeodesicoutputfile = "data/output_SUM_FourClass/FourClass_Geodesic_MaxXY_SUM.txt";
-	string fourClassEuclideanoutputfile = "data/output_SUM_FourClass/FourClass_Euclidean_MaxXY_SUM.txt";
-	//getDistanceMatrixFixIndex(fourClassGeodesicPath,fourClassGeodesicoutputfile);
-	/*
-	//G E SumXY MAX
-	string fourClassGeodesicFile = "data/output_FourClass/FourClass_Geodesic_SumXY_MAX.txt";
-	string fourClassEuclideanFile = "data/output_FourClass/FourClass_Euclidean_SumXY_MAX.txt";
-	string GENormalizeOutput = "data/output_FourClass/fourClassGENormalize_SumXY_MAX";
-	combineGEDistMat(fourClassGeodesicFile,fourClassEuclideanFile,GENormalizeOutput,fourClassGeodesicPath,fourClassEuclideanPath);
-	//G E MaxXY MAX
-	fourClassGeodesicFile = "data/output_FourClass/FourClass_Geodesic_MaxXY_MAX.txt";
-	fourClassEuclideanFile = "data/output_FourClass/FourClass_Euclidean_MaxXY_MAX.txt";
-	GENormalizeOutput = "data/output_FourClass/fourClassGENormalize_MaxXY_MAX";
-	combineGEDistMat(fourClassGeodesicFile,fourClassEuclideanFile,GENormalizeOutput,fourClassGeodesicPath,fourClassEuclideanPath);
-	//G E SumXY SUM
-	fourClassGeodesicFile = "data/output_SUM_FourClass/FourClass_Geodesic_SumXY_SUM.txt";
-	fourClassEuclideanFile = "data/output_SUM_FourClass/FourClass_Euclidean_SumXY_SUM.txt";
-	GENormalizeOutput = "data/output_SUM_FourClass/fourClassGENormalize_SumXY_Sum";
-	combineGEDistMat(fourClassGeodesicFile,fourClassEuclideanFile,GENormalizeOutput,fourClassGeodesicPath,fourClassEuclideanPath);
-	//G E MaxXY SUM
-	fourClassGeodesicFile = "data/output_SUM_FourClass/FourClass_Geodesic_MaxXY_SUM.txt";
-	fourClassEuclideanFile = "data/output_SUM_FourClass/FourClass_Euclidean_MaxXY_SUM.txt";
-	GENormalizeOutput = "data/output_SUM_FourClass/fourClassGENormalize_MaxXY_Sum";
-	combineGEDistMat(fourClassGeodesicFile,fourClassEuclideanFile,GENormalizeOutput,fourClassGeodesicPath,fourClassEuclideanPath);
-	*/
-	outputFileDiameter = "data/output_FourClass/FourClass_DiameterMat.txt";
-	//getDiameterDistMat(fourClassEuclideanPath, outputFileDiameter);
-	//MaxXY MAX(E D)
-	string fourClassEuclideanFile = "data/output_FourClass/FourClass_Euclidean_MaxXY_MAX.txt";
-	string EDMax = "data/output_FourClass/fourClassEDMax_MaxXY_MAX.txt";
-	combineDistMatTakeMax(outputFileDiameter,fourClassEuclideanFile, EDMax);
-	//SumXY MAX(E D)
-	fourClassEuclideanFile = "data/output_FourClass/FourClass_Euclidean_SumXY_MAX.txt";
-	EDMax = "data/output_FourClass/fourClassEDMax_SumXY_MAX.txt";
-	combineDistMatTakeMax(outputFileDiameter,fourClassEuclideanFile, EDMax);
-	//MaxXY SUM(E D)
-	fourClassEuclideanFile = "data/output_SUM_FourClass/FourClass_Euclidean_MaxXY_SUM.txt";
-	EDMax = "data/output_SUM_FourClass/fourClassEDMax_MaxXY_SUM.txt";
-	combineDistMatAddUp(outputFileDiameter,fourClassEuclideanFile,EDMax);
-	//SumXY SUM(E D)
-	fourClassEuclideanFile = "data/output_SUM_FourClass/FourClass_Euclidean_SumXY_SUM.txt";
-	EDMax = "data/output_SUM_FourClass/fourClassEDMax_SumXY_SUM.txt";
-	combineDistMatAddUp(outputFileDiameter,fourClassEuclideanFile,EDMax);
+		//4 class neural trees//
+		string fourClassGeodesicPath = "data/ResearchData/FourClass/Geodesic";
+		string fourClassEuclideanPath = "data/ResearchData/FourClass/Euclidean";
+		string fourClassGeodesicoutputfile = "data/output_SUM_FourClass/FourClass_Geodesic_MaxXY_SUM.txt";
+		string fourClassEuclideanoutputfile = "data/output_SUM_FourClass/FourClass_Euclidean_MaxXY_SUM.txt";
+		getDistanceMatrixFixIndex(fourClassGeodesicPath,fourClassGeodesicoutputfile);
+		string fourClassGeodesicFile = "data/output_FourClass/FourClass_Geodesic_SumXY_MAX.txt";
+		string fourClassEuclideanFile = "data/output_FourClass/FourClass_Euclidean_SumXY_MAX.txt";
+		string GENormalizeOutput = "data/output_FourClass/fourClassGENormalize_SumXY_MAX";
+		//combineGEDistMat(fourClassGeodesicFile,fourClassEuclideanFile,GENormalizeOutput,fourClassGeodesicPath,fourClassEuclideanPath);
+	}else{
+		cout<<"run sum version"<<endl;
+		string euclideanFilePath = "data/ResearchData/Euclidean";
+		string outputFile = "data/output_SUM/euclideanDistanceMat_SumXY_SUM.txt";
+		//getDistanceMatrixSumVersion(euclideanFilePath,outputFile,21,40);
+		string geodesicFilePath = "data/ResearchData/Geodesic";
+		outputFile =        "data/output_SUM/geodesicDistanceMat_SumXY_SUM.txt";
+		//getDistanceMatrixSumVersion(geodesicFilePath,outputFile,60,69);
+
+		string outputFileDiameter = "data/output_SUM/diameterDistMat.txt";
+		//getDiameterDistMat(euclideanFilePath, outputFileDiameter);
+
+		string geodesicFile = "data/output_SUM/geodesicDistanceMat_SumXY_SUM.txt";
+		string euclideanFile = "data/output_SUM/euclideanDistanceMat_SumXY_SUM.txt";
+		string combineGEMatWithoutSort = "data/output_SUM/combineGEMatNormalize_SUM.txt";
+		//combineGEDistMat(geodesicFile,euclideanFile,combineGEMatWithoutSort,geodesicFilePath,euclideanFilePath);
+
+		string diameterEuclideanMaxWithoutSort = "data/output_SUM/combineDiameterEuclideanSum_SUM.txt";
+		//combineDistMatAddUp(outputFileDiameter,euclideanFile,diameterEuclideanMaxWithoutSort);
+
+		//test below
+		string testfilepath = "data/ResearchData/FourClass/Euclidean";
+		string outputfile = "data/output_FourClass/FourClass_Euclidean_MaxXY_SUM.txt";
+		//getDistanceMatrixSumVersion(testfilepath,outputfile,0,3);
+		getDistanceMatrixFixIndex(testfilepath,outputfile);
+	}
 	return 0;
 }
 

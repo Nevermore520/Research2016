@@ -20,8 +20,8 @@ public class Main {
 			File next = new File(inputFile);
 			//String outputFile = "data/output/modified_"+next.getName(); // need to change folder for new data
 			//String outputFile = "data/output/modified_geodesic_"+next.getName();
-			String outputFile = "data/FourClassOutput/Geodesic/"+(i+1)+"_Geodesic_"+next.getName();
-			fileTransfer = new GeodesicFileTransfer(inputFile);
+			String outputFile = "data/FourClassOutput/Euclidean/"+(i+1)+"_Euclidean_"+next.getName();
+			fileTransfer = new EuclideanFileTransfer(inputFile);
 			fileTransfer.ChangeFileFormat(outputFile);
 		}
 	}
