@@ -728,7 +728,7 @@ vector<double> getGeodesicDiameterArrayFixIndex(string filePath){
 }
 
 void getDiameterDistMat(string filePath, string outputFile){
-	vector<double> diameters = getEuclideanDiameterArray(filePath);
+	vector<double> diameters = getEuclideanDiameterArrayFixIndex(filePath);
 	vector<vector<double> > diameterMat;
 	int size = diameters.size();
 	diameterMat.resize(size);
@@ -761,11 +761,24 @@ void matrixDivide(vector<vector<double> > &mat, double divisor){
 	}
 }
 
+bool geodesicDiameterMaxFind = false;
+double deodesicDiameterMaxSaved = 1;
 void combineGEDistMat(string geodesicMatFile, string EuclideanMatFile,string outputFile, string geodesicFilePath, string euclideanFilePath){
 	vector<double> geodesicDiameters = getGeodesicDiameterArray(geodesicFilePath);
 	vector<double> euclideanDiameters = getEuclideanDiameterArray(euclideanFilePath);
 	double geodesicDiameterMax = findMax(geodesicDiameters);
 	double euclideanDiameterMax = findMax(euclideanDiameters);
+	/*
+	vector<double> euclideanDiameters = getEuclideanDiameterArray(euclideanFilePath);
+	double euclideanDiameterMax = findMax(euclideanDiameters);
+	double geodesicDiameterMax = deodesicDiameterMaxSaved;
+	if(!geodesicDiameterMaxFind){
+		vector<double> geodesicDiameters = getGeodesicDiameterArray(geodesicFilePath);
+		deodesicDiameterMaxSaved = findMax(geodesicDiameters);
+		geodesicDiameterMaxFind = true;
+		geodesicDiameterMax = deodesicDiameterMaxSaved;
+	}
+	*/
 
 	vector<vector<double> > geodesicMat;
 	vector<vector<double> > euclideanMat;
@@ -817,7 +830,7 @@ int main(int argc, char **argv)
 
 	string diameterEuclideanMaxWithoutSort = "data/output/combineDiameterEuclideanMaxWithoutSort_MaxXY.txt";
 	//combineDistMatTakeMax(outputFileDiameter,euclideanFile, diameterEuclideanMaxWithoutSort);
-
+/*
 	//4 class neural trees//
 	string HBfourClassEuclideanPath = "data/ResearchData/FourClassHippoBreak/Euclidean";
 	string HBfourClassGeodesicPath = "data/ResearchData/FourClassHippoBreak/Geodesic";
@@ -830,27 +843,27 @@ int main(int argc, char **argv)
 	string fourClassGeodesicFile = "data/output_FourClass_HippoBreak/MAX/dBMax_deltaL1_Personly_Geodesic.txt";
 	string fourClassEuclideanFile = "data/output_FourClass_HippoBreak/MAX/dBMax_deltaL1_Personly_Euclidean.txt";
 	string GENormalizeOutput = "data/output_FourClass_HippoBreak/MAX/dBMax_deltaL1.txt";
-	combineGEDistMat(fourClassGeodesicFile,fourClassEuclideanFile,GENormalizeOutput,HBfourClassGeodesicPath,HBfourClassEuclideanPath);
+	//combineGEDistMat(fourClassGeodesicFile,fourClassEuclideanFile,GENormalizeOutput,HBfourClassGeodesicPath,HBfourClassEuclideanPath);
 	//G E MaxXY MAX
 	fourClassGeodesicFile = "data/output_FourClass_HippoBreak/MAX/dBMax_deltaLinfty_Personly_Geodesic.txt";
 	fourClassEuclideanFile = "data/output_FourClass_HippoBreak/MAX/dBMax_deltaLinfty_Personly_Euclidean.txt";
 	GENormalizeOutput = "data/output_FourClass_HippoBreak/MAX/dBMax_deltaLinfty.txt";
-	combineGEDistMat(fourClassGeodesicFile,fourClassEuclideanFile,GENormalizeOutput,HBfourClassGeodesicPath,HBfourClassEuclideanPath);
+	//combineGEDistMat(fourClassGeodesicFile,fourClassEuclideanFile,GENormalizeOutput,HBfourClassGeodesicPath,HBfourClassEuclideanPath);
 	//G E SumXY SUM
 	fourClassGeodesicFile = "data/output_FourClass_HippoBreak/SUM/dBSum_deltaL1_Personly_Geodesic.txt";
 	fourClassEuclideanFile = "data/output_FourClass_HippoBreak/SUM/dBSum_deltaL1_Personly_Euclidean.txt";
 	GENormalizeOutput = "data/output_FourClass_HippoBreak/SUM/dBSum_deltaL1.txt";
-	combineGEDistMat(fourClassGeodesicFile,fourClassEuclideanFile,GENormalizeOutput,HBfourClassGeodesicPath,HBfourClassEuclideanPath);
+	//combineGEDistMat(fourClassGeodesicFile,fourClassEuclideanFile,GENormalizeOutput,HBfourClassGeodesicPath,HBfourClassEuclideanPath);
 	//G E MaxXY SUM
 	fourClassGeodesicFile = "data/output_FourClass_HippoBreak/SUM/dBSum_deltaLinfty_Personly_Geodesic.txt";
 	fourClassEuclideanFile = "data/output_FourClass_HippoBreak/SUM/dBSum_deltaLinfty_Personly_Euclidean.txt";
 	GENormalizeOutput = "data/output_FourClass_HippoBreak/SUM/dBSum_deltaLinfty.txt";
-	combineGEDistMat(fourClassGeodesicFile,fourClassEuclideanFile,GENormalizeOutput,HBfourClassGeodesicPath,HBfourClassEuclideanPath);
+	//combineGEDistMat(fourClassGeodesicFile,fourClassEuclideanFile,GENormalizeOutput,HBfourClassGeodesicPath,HBfourClassEuclideanPath);
 
 	outputFileDiameter = "data/output_FourClass_HippoBreak/FourClass_DiameterMat.txt";
 	getDiameterDistMat(HBfourClassEuclideanPath, outputFileDiameter);
 	//MaxXY MAX(E D)
-	string fourClassEuclideanFile = "data/output_FourClass_HippoBreak/MAX/dBMax_deltaLinfty_Personly_Euclidean.txt";
+	fourClassEuclideanFile = "data/output_FourClass_HippoBreak/MAX/dBMax_deltaLinfty_Personly_Euclidean.txt";
 	string EDoutput = "data/output_FourClass_HippoBreak/MAX/dBMax_deltaLinfty_combMax.txt";
 	combineDistMatTakeMax(outputFileDiameter,fourClassEuclideanFile, EDoutput);
 	//SumXY MAX(E D)
@@ -865,6 +878,33 @@ int main(int argc, char **argv)
 	fourClassEuclideanFile = "data/output_FourClass_HippoBreak/SUM/dBSum_deltaL1_Personly_Euclidean.txt";
 	EDoutput = "data/output_FourClass_HippoBreak/SUM/dBSum_deltaL1_combSum.txt";
 	combineDistMatAddUp(outputFileDiameter,fourClassEuclideanFile,EDoutput);
+	*/
+
+
+
+
+	//4 class neural trees//
+		string fourClassEuclideanPath = "data/ResearchData/FourClass/Euclidean";
+		string fourClassGeodesicPath = "data/ResearchData/FourClass/Geodesic";
+
+		outputFileDiameter = "data/output_FourClass/FourClass_DiameterMat.txt";
+		getDiameterDistMat(fourClassEuclideanPath, outputFileDiameter);
+		//MaxXY MAX(E D)
+		string fourClassEuclideanFile = "data/output_FourClass/dBMax_deltaLinfty_Personly_Euclidean.txt";
+		string EDoutput = "data/output_FourClass/dBMax_deltaLinfty_combMax.txt";
+		combineDistMatTakeMax(outputFileDiameter,fourClassEuclideanFile, EDoutput);
+		//SumXY MAX(E D)
+		fourClassEuclideanFile = "data/output_FourClass/dBMax_deltaL1_Personly_Euclidean.txt";
+		EDoutput = "data/output_FourClass/dBMax_deltaL1_combMax.txt";
+		combineDistMatTakeMax(outputFileDiameter,fourClassEuclideanFile, EDoutput);
+		//MaxXY SUM(E D)
+		fourClassEuclideanFile = "data/output_SUM_FourClass/dBSum_deltaLinfty_Personly_Euclidean.txt";
+		EDoutput = "data/output_SUM_FourClass/dBSum_deltaLinfty_combSum.txt";
+		combineDistMatAddUp(outputFileDiameter,fourClassEuclideanFile,EDoutput);
+		//SumXY SUM(E D)
+		fourClassEuclideanFile = "data/output_SUM_FourClass/dBSum_deltaL1_Personly_Euclidean.txt";
+		EDoutput = "data/output_SUM_FourClass/dBSum_deltaL1_combSum.txt";
+		combineDistMatAddUp(outputFileDiameter,fourClassEuclideanFile,EDoutput);
 	return 0;
 }
 
