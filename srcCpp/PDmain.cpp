@@ -301,7 +301,7 @@ vector<string> getFixIndexFiles(vector<string> files){
 }
 
 void getDistanceMatrixFixIndex(string filePath, string outputFile){
-	// TODO
+
 	//file name start with its index eg. 12_name.swc, this index start from 1
 	vector<string> files;
 	getFiles(filePath, "swc", files);
@@ -801,7 +801,7 @@ void combineDistMatAddUp(string matFile1, string matFile2, string outputFile){
 	printMat(outputFile,matSum);
 }
 
-int main(int argc, char **argv)
+int main_for_Giogio_data(int argc, char **argv)
 {
 	cout<<"run max version"<<endl;
 	string euclideanFilePath = "data/ResearchData/Euclidean";
@@ -878,7 +878,7 @@ int main(int argc, char **argv)
 	fourClassEuclideanFile = "data/output_FourClass_HippoBreak/SUM/dBSum_deltaL1_Personly_Euclidean.txt";
 	EDoutput = "data/output_FourClass_HippoBreak/SUM/dBSum_deltaL1_combSum.txt";
 	combineDistMatAddUp(outputFileDiameter,fourClassEuclideanFile,EDoutput);
-	*/
+*/
 
 
 
@@ -908,3 +908,36 @@ int main(int argc, char **argv)
 	return 0;
 }
 
+void getNearestNeighbor(string input, string output){
+	vector<vector<double> > distanceMat;
+	readMat(input,distanceMat);
+	vector<int> nearestNeighbor;
+	nearestNeighbor.resize(distanceMat.size());
+	for(size_t i = 0; i<distanceMat.size();i++){
+		int minIndex = -1;
+		double min = numeric_limits<double>::max();
+		for(size_t j = 0; j<distanceMat.size();j++){
+			if(j == i) continue;
+			if(distanceMat[i][j]<min){
+				min = distanceMat[i][j];
+				minIndex = j+1; // file index start from 1.
+			}
+		}
+		nearestNeighbor[i] = minIndex;
+	}
+	std::ofstream ofs;
+	ofs.open(output.c_str());
+	for(size_t i=0;i<nearestNeighbor.size();i++){
+		ofs<<nearestNeighbor[i]<<"\n";
+	}
+	ofs.close();
+	ofs.clear();
+}
+int main(int argc, char **argv){
+	string ZhaoEuclideanPath = "data/Zhao_trees/output_Euclidean";
+	string ZhaoEuclideanOutput = "data/Zhao_trees/output/dBSum_deltaLinfty_Personly_Euclidean.txt"; //SUM/dBSum_deltaLinfty_Personly_Euclidean.txt
+	getDistanceMatrixFixIndex(ZhaoEuclideanPath,ZhaoEuclideanOutput);
+	string ZhaoEuclideanNNCoutput = "data/Zhao_trees/output/dBSum_deltaLinfty_Personly_Euclidean_euclideanNNC_NN.txt";
+	getNearestNeighbor(ZhaoEuclideanOutput,ZhaoEuclideanNNCoutput);
+
+}

@@ -10,8 +10,8 @@ public class Main {
 	public static void main(String[] args) throws FileNotFoundException, UnsupportedEncodingException {
 		// TODO Auto-generated method stub
 		List<String> fileNames = new LinkedList<String>();
-		final File folder = new File("data/FourClassData"); //need to change folder for new data
-		listFilesForFolder(folder,fileNames);
+		final File folder = new File("data/Zhao_trees/All_Cells"); //need to change folder for new data
+		FileFunctions.listFilesForFolder(folder,fileNames);
 		System.out.println(fileNames.size()+" files read.");
 		FileTransfer fileTransfer;
 		for(int i=0;i<fileNames.size();i++){
@@ -20,20 +20,13 @@ public class Main {
 			File next = new File(inputFile);
 			//String outputFile = "data/output/modified_"+next.getName(); // need to change folder for new data
 			//String outputFile = "data/output/modified_geodesic_"+next.getName();
-			String outputFile = "data/FourClassOutput/Euclidean/"+(i+1)+"_Euclidean_"+next.getName();
+			//String outputFile = "data/FourClassHippoBreakOutput/Geodesic/"+(i+1)+"_Geodesic_"+next.getName();
+			String outputFile = "data/Zhao_trees/output_Euclidean/"+(i+1)+"_Euclidean_"+next.getName();
 			fileTransfer = new EuclideanFileTransfer(inputFile);
 			fileTransfer.ChangeFileFormat(outputFile);
 		}
 	}
 	
-	public static void listFilesForFolder(final File folder, List<String> fileNames) {
-	    for (final File fileEntry : folder.listFiles()) {
-	        if (fileEntry.isDirectory()) {
-	            listFilesForFolder(fileEntry, fileNames);
-	        } else {
-	            fileNames.add(fileEntry.getPath());
-	        }
-	    }
-	}
+
 
 }
