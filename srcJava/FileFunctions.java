@@ -15,7 +15,7 @@ public class FileFunctions {
 	
 	public static void main(String[] args) throws FileNotFoundException, UnsupportedEncodingException{
 		String fileFolder = "data/Zhao_trees/All_Cells";
-		String NNCfile = "data/Zhao_trees/output/dBSum_deltaLinfty_Personly_Euclidean_euclideanNNC_NN.txt";
+		String NNCfile = "data/Zhao_trees/output/dBSum_deltaLinfty_combSum_Euclidean_euclideanNNC_NN.txt";
 		String resultFile = "data/Zhao_trees/output/classifyResult.txt";
 		FileFunctions.validateSameDirectory(fileFolder, NNCfile, resultFile);
 	}
@@ -24,33 +24,49 @@ public class FileFunctions {
 		List<String> fileNames = new LinkedList<String>();
 		final File folder = new File(fileFolder);
 		FileFunctions.listFilesForFolder(folder,fileNames);
-		List<Integer> sameClass = new ArrayList<Integer>();
-		List<Integer> nearestNeighborIndex = FileFunctions.readList(input); // index start from 1
+		int[] sameClass = new int[fileNames.size()];
+		List<List<Integer>> nearestNeighborIndex = FileFunctions.readKNNList(input); // index start from 1
 		for(int i=0;i<nearestNeighborIndex.size();i++){
-			int NNIndex = nearestNeighborIndex.get(i)-1; 
-			String queryName = fileNames.get(i);
-			String NNName = fileNames.get(NNIndex);
-			System.out.println(queryName+"\n"+NNName+"\n");
-			if(queryName.substring(0,queryName.lastIndexOf("\\")).equals(NNName.substring(0, NNName.lastIndexOf("\\")))){
-				sameClass.add(1);
-			}else{
-				sameClass.add(0);
+			for(int j = 0;j< nearestNeighborIndex.get(i).size();j++){
+				int NNIndex = nearestNeighborIndex.get(i).get(j)-1; 
+				String queryName = fileNames.get(i);
+				String NNName = fileNames.get(NNIndex);
+				//System.out.println(queryName+"\n"+NNName+"\n");
+				if(queryName.substring(0,queryName.lastIndexOf("\\")).equals(NNName.substring(0, NNName.lastIndexOf("\\")))){
+					sameClass[i] += 1;
+				}
 			}
 		}
 		int sum = 0;
-		for(int i=0;i<sameClass.size();i++){
-			sum+=sameClass.get(i);
+		for(int i=0;i<sameClass.length;i++){
+			sum+=sameClass[i]>0?1:0;
 		}
-		System.out.println(sum+"/"+sameClass.size());
+		System.out.println(sum+"/"+sameClass.length);
 		printList(sameClass, output);
 	}
 	
-	public static void printList(List<Integer> sameClass, String output) throws FileNotFoundException, UnsupportedEncodingException{
+	public static void printList(int[] sameClass, String output) throws FileNotFoundException, UnsupportedEncodingException{
 		PrintWriter writer = new PrintWriter(output, "UTF-8");
-		for(int i=0;i<sameClass.size();i++){
-			writer.println(sameClass.get(i));
+		for(int i=0;i<sameClass.length;i++){
+			writer.println(sameClass[i]);
 		}
 		writer.close();
+	}
+	
+	public static List<List<Integer>> readKNNList(String input) throws FileNotFoundException{
+		List<List<Integer>> list = new ArrayList<List<Integer>>();
+		Scanner scanner = new Scanner(new FileReader(input));
+		while(scanner.hasNext()){
+			String[] nextLine = scanner.nextLine().split("\\s+");
+			List<Integer> tmp = new ArrayList<Integer>();
+			for(int i=0;i<nextLine.length;i++){
+				tmp.add(Integer.parseInt(nextLine[i]));
+			}
+			list.add(tmp);
+		}
+		System.out.println(list.size());
+		scanner.close();
+		return list;
 	}
 	
 	public static List<Integer> readList(String input) throws FileNotFoundException{

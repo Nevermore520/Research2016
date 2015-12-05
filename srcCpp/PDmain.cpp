@@ -22,7 +22,7 @@ public:
 };
 
 typedef std::priority_queue<std::pair<int, Point3D>, std::vector< std::pair<int, Point3D> >, myComp3D> mypq_type;
-
+typedef pair<double, int> myNN_pair;
 /***********************************************/
 char * strLicense = "THIS SOFTWARE IS PROVIDED \"AS-IS\". THERE IS NO WARRANTY OF ANY KIND. "
 "NEITHER THE AUTHORS NOR THE OHIO STATE UNIVERSITY WILL BE LIABLE FOR "
@@ -908,36 +908,77 @@ int main_for_Giogio_data(int argc, char **argv)
 	return 0;
 }
 
-void getNearestNeighbor(string input, string output){
+void getNearestKNeighbor(string input, string output, int k){
 	vector<vector<double> > distanceMat;
 	readMat(input,distanceMat);
-	vector<int> nearestNeighbor;
+	vector<vector<int> > nearestNeighbor;
 	nearestNeighbor.resize(distanceMat.size());
+	for(size_t i = 0; i < distanceMat.size();i++){
+		nearestNeighbor[i].resize(k);
+	}
 	for(size_t i = 0; i<distanceMat.size();i++){
-		int minIndex = -1;
-		double min = numeric_limits<double>::max();
+		std::priority_queue<myNN_pair, vector<myNN_pair> > pq;
+		double min = 0;
 		for(size_t j = 0; j<distanceMat.size();j++){
 			if(j == i) continue;
-			if(distanceMat[i][j]<min){
-				min = distanceMat[i][j];
-				minIndex = j+1; // file index start from 1.
+			pq.push(std::pair<double, int>(distanceMat[i][j], j+1));// file index start from 1.
+			if(pq.size()>k) {
+				if(min>pq.top().first) cout<<"test"<<endl;
+				pq.pop();
 			}
 		}
-		nearestNeighbor[i] = minIndex;
+		for(size_t j = 0;j<k&&pq.size()>0;j++){
+			nearestNeighbor[i][j] = pq.top().second;
+			pq.pop();
+		}
 	}
 	std::ofstream ofs;
 	ofs.open(output.c_str());
 	for(size_t i=0;i<nearestNeighbor.size();i++){
-		ofs<<nearestNeighbor[i]<<"\n";
+		for(size_t j = 0;j<k;j++){
+			ofs<<nearestNeighbor[i][j]<<" ";
+		}
+		ofs<<"\n";
 	}
 	ofs.close();
 	ofs.clear();
 }
+
+void getNearestNeighbor(string input, string output){
+	getNearestKNeighbor(input, output, 1);
+}
+
 int main(int argc, char **argv){
 	string ZhaoEuclideanPath = "data/Zhao_trees/output_Euclidean";
-	string ZhaoEuclideanOutput = "data/Zhao_trees/output/dBSum_deltaLinfty_Personly_Euclidean.txt"; //SUM/dBSum_deltaLinfty_Personly_Euclidean.txt
-	getDistanceMatrixFixIndex(ZhaoEuclideanPath,ZhaoEuclideanOutput);
-	string ZhaoEuclideanNNCoutput = "data/Zhao_trees/output/dBSum_deltaLinfty_Personly_Euclidean_euclideanNNC_NN.txt";
-	getNearestNeighbor(ZhaoEuclideanOutput,ZhaoEuclideanNNCoutput);
+	string ZhaoEuclideanOutput_dBSum_Linfty = "data/Zhao_trees/output/dBSum_deltaLinfty_Personly_Euclidean.txt"; //SUM/dBSum_deltaLinfty_Personly_Euclidean.txt
+	string ZhaoEuclideanOutput_dBSum_l1 = "data/Zhao_trees/output/dBSum_deltaL1_Personly_Euclidean.txt";
+	//getDistanceMatrixFixIndex(ZhaoEuclideanPath,ZhaoEuclideanOutput_dBSum);
 
+	string outputFileDiameter = "data/Zhao_trees/output/zhao_trees_DiameterMat.txt";
+	getDiameterDistMat(ZhaoEuclideanPath, outputFileDiameter);
+
+	string EDoutput = "data/Zhao_trees/output/zhao_trees_dBSum_deltaLinfty_combMax.txt";
+	combineDistMatTakeMax(outputFileDiameter,ZhaoEuclideanOutput_dBSum_Linfty, EDoutput);
+	EDoutput = "data/Zhao_trees/output/zhao_trees_dBSum_deltaL1_combMax.txt";
+	combineDistMatTakeMax(outputFileDiameter,ZhaoEuclideanOutput_dBSum_l1, EDoutput);
+	EDoutput = "data/Zhao_trees/output/zhao_trees_dBSum_deltaLinfty_combSum.txt";
+	combineDistMatAddUp(outputFileDiameter,ZhaoEuclideanOutput_dBSum_Linfty,EDoutput);
+	EDoutput = "data/Zhao_trees/output/zhao_trees_dBSum_deltaL1_combSum.txt";
+	combineDistMatAddUp(outputFileDiameter,ZhaoEuclideanOutput_dBSum_l1,EDoutput);
+
+	string ZhaoEuclideanNNCoutput = "data/Zhao_trees/output/dBSum_deltaL1_Personly_Euclidean_euclideanNNC_NN.txt";
+	//getNearestKNeighbor(ZhaoEuclideanOutput,ZhaoEuclideanNNCoutput, 5);
+
+	ZhaoEuclideanNNCoutput = "data/Zhao_trees/output/dBSum_deltaLinfty_combMax_Euclidean_euclideanNNC_NN.txt";
+	string EDoutput_KNN = "data/Zhao_trees/output/zhao_trees_dBSum_deltaLinfty_combMax.txt";
+	getNearestKNeighbor(EDoutput_KNN,ZhaoEuclideanNNCoutput, 5);
+	ZhaoEuclideanNNCoutput = "data/Zhao_trees/output/dBSum_deltaL1_combMax_Euclidean_euclideanNNC_NN.txt";
+	EDoutput_KNN = "data/Zhao_trees/output/zhao_trees_dBSum_deltaL1_combMax.txt";
+	getNearestKNeighbor(EDoutput_KNN,ZhaoEuclideanNNCoutput, 5);
+	ZhaoEuclideanNNCoutput = "data/Zhao_trees/output/dBSum_deltaLinfty_combSum_Euclidean_euclideanNNC_NN.txt";
+	EDoutput_KNN = "data/Zhao_trees/output/zhao_trees_dBSum_deltaLinfty_combSum.txt";
+	getNearestKNeighbor(EDoutput_KNN,ZhaoEuclideanNNCoutput, 5);
+	ZhaoEuclideanNNCoutput = "data/Zhao_trees/output/dBSum_deltaL1_combSum_Euclidean_euclideanNNC_NN.txt";
+	EDoutput_KNN = "data/Zhao_trees/output/zhao_trees_dBSum_deltaL1_combSum.txt";
+	getNearestKNeighbor(EDoutput_KNN,ZhaoEuclideanNNCoutput, 5);
 }
