@@ -23,10 +23,9 @@ public class Main {
 			//String outputFile = "data/FourClassHippoBreakOutput/Geodesic/"+(i+1)+"_Geodesic_"+next.getName();
 			String outputFile = "data/Zhao_trees/output_Euclidean/"+(i+1)+"_Euclidean_"+next.getName();
 			fileTransfer = new EuclideanFileTransfer(inputFile);
-			fileTransfer.ChangeFileFormat(outputFile);
+			//fileTransfer.ChangeFileFormat(outputFile);
+			String densityOutputFile = "data/Zhao_trees/output_Density/"+(i+1)+"_density_"+next.getName();
+			fileTransfer.printDensityCount(densityOutputFile);
 		}
 	}
-	
-
-
 }

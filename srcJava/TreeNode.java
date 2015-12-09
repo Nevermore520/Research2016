@@ -2,29 +2,21 @@ import java.util.HashSet;
 import java.util.Set;
 
 
-public class TreeNode {
+public class TreeNode{
 
-	TreeNode parentNode;
-	TreeNode parentPoint;
-	Point3D val;
-	Set<TreeNode> children;
-	double distance;
-	int index;
+	private TreeNode parentNode;
+	private Point3D val;
+	private Set<TreeNode> children;
+	private double distance;
+	private int index;
 	
 	public TreeNode(TreeNode parent, Point3D val){
-		this.parentNode = null;
-		this.parentPoint = parent;
+		this.parentNode = parent;
+		//this.parentPoint = parent;
 		this.val = val;
 		this.children = new HashSet<TreeNode>();
 		this.distance = 0;
 		index = 0;
-	}
-	
-	public TreeNode getParentPoint(){
-		return this.parentPoint;
-	}
-	public void setParentPoint(TreeNode parent){
-		this.parentPoint = parent;
 	}
 	public TreeNode getParentNode(){
 		return this.parentNode;
@@ -40,9 +32,6 @@ public class TreeNode {
 	public int childrenNum(){
 		return this.children.size();
 	}
-//	public void deleteChild(TreeNode child){
-//		this.children.remove(child);
-//	}
 	public void addChild(TreeNode child){
 		this.children.add(child);
 	}
