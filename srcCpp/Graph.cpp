@@ -10,8 +10,8 @@ double computeDistance(pair<double, double>& p1, pair<double, double>& p2)
 	double deltaX, deltaY;
 	deltaX = fabs(p1.first - p2.first);
 	deltaY = fabs(p1.second - p2.second);
-	//return deltaX+deltaY; //delta L1
-	return deltaX > deltaY ? deltaX : deltaY; //delta Linfty
+	return deltaX+deltaY; //delta L1
+	//return deltaX > deltaY ? deltaX : deltaY; //delta Linfty
 }
 
 int compare(const void * a, const void * b)

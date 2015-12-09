@@ -26,7 +26,7 @@
 #define BNORMALIZE false //control normalization
 #define CUTOFF 0		//control cutoff value
 #define B_ONE_RING_NEIGHBOR true
-#define B_SUMMER_BN true // true is sum version
+#define B_SUMMER_BN false // true is sum version
 
 #define cell      double
 

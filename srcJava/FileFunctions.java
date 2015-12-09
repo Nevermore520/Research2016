@@ -15,7 +15,7 @@ public class FileFunctions {
 	
 	public static void main(String[] args) throws FileNotFoundException, UnsupportedEncodingException{
 		String fileFolder = "data/Zhao_trees/All_Cells";
-		String NNCfile = "data/Zhao_trees/output/dBSum_deltaLinfty_combSum_Euclidean_euclideanNNC_NN.txt";
+		String NNCfile = "data/Zhao_trees/output/dBSum_deltaLinfty_combSum_Euclidean_euclideanNNC_10NN.txt";
 		String resultFile = "data/Zhao_trees/output/classifyResult.txt";
 		FileFunctions.validateSameDirectory(fileFolder, NNCfile, resultFile);
 	}
