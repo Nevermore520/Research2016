@@ -948,6 +948,84 @@ void getNearestNeighbor(string input, string output){
 	getNearestKNeighbor(input, output, 1);
 }
 
+/* build density distance matrix */
+vector<pair<double, int> > getDensityCurve(string inputFile){
+	std::ifstream ifs;
+	ifs.open(inputFile.c_str());
+	unsigned int length;
+	ifs>>length;
+	double distance;
+	int count;
+	vector<pair<double, int> > densityCurve;
+	for(size_t i = 0; i<length; i++){
+		ifs>>distance>>count;
+		densityCurve.push_back(make_pair(distance, count));
+	}
+	ifs.close();
+	ifs.clear();
+	return densityCurve;
+}
+
+double computeDensityDistance(vector<pair<double, int> > densityCurve1, vector<pair<double, int> > densityCurve2){
+	double result = 0;
+	int idx1 = 1;
+	int idx2 = 1;
+	while(idx1<densityCurve1.size()&&idx2<densityCurve2.size()){
+		pair<double, int> p1 = densityCurve1[idx1-1];
+		pair<double, int> p2 = densityCurve2[idx2-1];
+		if(densityCurve1[idx1].first<densityCurve2[idx2].first){
+			result+=abs((densityCurve1[idx1].first-max(p1.first, p2.first))*(p1.second-p2.second));
+			idx1++;
+		}else{
+			result+=abs(max(densityCurve1[idx1-1].first, densityCurve2[idx2].first)*(p1.second-p2.second));
+			idx2++;
+		}
+	}
+	while(idx1<densityCurve1.size()){
+		result+=densityCurve1[idx1++].second;
+	}
+	while(idx2<densityCurve2.size()){
+		result+=densityCurve2[idx2++].second;
+	}
+	return result;
+}
+
+vector<vector<double> > computeDensityDistanceMatrix(vector<string> files){
+	vector<vector<double> > distanceMat;
+	unsigned int fileNum = files.size();
+	distanceMat.resize(fileNum);
+	for (size_t i = 0; i < fileNum; ++i){
+		distanceMat[i].resize(fileNum);
+	}
+
+	std::string fileName1, fileName2, fileResult = "data/dummyFile.txt";
+	double result;
+	for(size_t i=0;i<fileNum;i++){
+		cout<<"process i-th tree: "<<i<<endl;
+		fileName1 = files[i];
+		vector<pair<double, int> > densityCurve1 = getDensityCurve(fileName1);
+		for(size_t j=i;j<fileNum;j++){
+			fileName2 = files[j];
+			vector<pair<double, int> > densityCurve2 = getDensityCurve(fileName2);
+			result = computeDensityDistance(densityCurve1, densityCurve2);
+			distanceMat[i][j] = result;
+			distanceMat[j][i] = result;
+		}
+	}
+	return distanceMat;
+}
+
+void getDensityDistanceMatrixFixIndex(string filePath, string outputFile){
+
+	//file name start with its index eg. 12_name.swc, this index start from 1
+	vector<string> files;
+	getFiles(filePath, "swc", files);
+	vector<string> filesFixIndex = getFixIndexFiles(files);
+	vector<vector<double> > distanceMat = computeDensityDistanceMatrix(filesFixIndex);
+	printMat(outputFile,distanceMat);
+}
+/* end build density distance matrix */
+
 int main(int argc, char **argv){
 	string ZhaoEuclideanPath = "data/Zhao_trees/output_Euclidean";
 	string ZhaoEuclideanOutput_dBSum_Linfty = "data/Zhao_trees/output/dBSum_deltaLinfty_Personly_Euclidean.txt"; //SUM/dBSum_deltaLinfty_Personly_Euclidean.txt
