@@ -5,6 +5,7 @@ import java.io.PrintWriter;
 import java.io.UnsupportedEncodingException;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
@@ -26,6 +27,20 @@ public class FileFunctions {
 		FileFunctions.listFilesForFolder(folder,fileNames);
 		int[] sameClass = new int[fileNames.size()];
 		List<List<Integer>> nearestNeighborIndex = FileFunctions.readKNNList(input); // index start from 1
+		
+		//use map to save class name
+		Map<String, Integer> classMap = new HashMap<String, Integer>();
+		//Map<String, String> nameFolder = new HashMap<String, String>();
+		for(int i=0;i<fileNames.size();i++){
+			String queryName = fileNames.get(i);
+			String name = queryName.substring(0, queryName.lastIndexOf("\\"));
+			//String fileName = queryName.substring(0, queryName.lastIndexOf("\\")+1);
+			if(!classMap.containsKey(name)){
+				classMap.put(name, 0);
+			}
+			classMap.put(name, classMap.get(name)+1);
+			//nameFolder.put(fileName, name);
+		}
 		for(int i=0;i<nearestNeighborIndex.size();i++){
 			for(int j = 0;j< nearestNeighborIndex.get(i).size();j++){
 				int NNIndex = nearestNeighborIndex.get(i).get(j)-1; 
@@ -37,12 +52,43 @@ public class FileFunctions {
 				}
 			}
 		}
+		//check misclassified class size
+		Map<String, Integer> misclassified = new LinkedHashMap<String, Integer>();
+		for(int i=0;i<fileNames.size();i++){
+			if(sameClass[i] == 0){
+				String queryName = fileNames.get(i);
+				String className = queryName.substring(0, queryName.lastIndexOf("\\"));
+				//String fileName = queryName.substring(0, queryName.lastIndexOf("\\")+1);
+				//TODO class count is not correct
+				if(!misclassified.containsKey(className)){
+					misclassified.put(className, 1);
+				}else{
+					misclassified.put(className, misclassified.get(className)+1);
+				}
+			}
+		}
 		int sum = 0;
 		for(int i=0;i<sameClass.length;i++){
 			sum+=sameClass[i]>0?1:0;
 		}
 		System.out.println(sum+"/"+sameClass.length);
 		printList(sameClass, output);
+		
+		//print misclassified
+		int[] bucket = new int[100];
+		for(Map.Entry<String, Integer> entry: misclassified.entrySet()){
+			//if(classMap.get(entry.getKey()) == 1) continue;
+			System.out.println(entry.getKey()+" : "+entry.getValue());
+			bucket[classMap.get(entry.getKey())]+=entry.getValue();
+		}
+		System.out.println("Statistics:");
+		System.out.println("class size\tmisclassified count");
+		for(int i=0;i<bucket.length;i++){
+			if(bucket[i]>0){
+				System.out.println(i+"\t\t"+bucket[i]);
+			}
+		}
+		
 	}
 	
 	public static void printList(int[] sameClass, String output) throws FileNotFoundException, UnsupportedEncodingException{
