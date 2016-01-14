@@ -21,19 +21,25 @@ public class Main {
 		FileFunctions.listFilesForFolder(folder,fileNames);
 		System.out.println(fileNames.size()+" files read.");
 		FileTransfer fileTransfer;
+		int controller = 1;
 		for(int i=0;i<fileNames.size();i++){
 			System.out.println("process file: "+fileNames.get(i));
 			String inputFile = fileNames.get(i);
-			File next = new File(inputFile);
-			//String outputFile = "data/output/modified_"+next.getName(); // need to change folder for new data
-			//String outputFile = "data/output/modified_geodesic_"+next.getName();
-			//String outputFile = "data/FourClassHippoBreakOutput/Geodesic/"+(i+1)+"_Geodesic_"+next.getName();
-			String outputFile = "data/Zhao_trees/output_Euclidean/"+(i+1)+"_Euclidean_"+next.getName();	// i+1 is the index of this file
 			fileTransfer = new EuclideanFileTransfer(inputFile);
-			//fileTransfer = new GeodesicFileTransfer(inputFile);
-			fileTransfer.ChangeFileFormat(outputFile);
-			String densityOutputFile = "data/Zhao_trees/output_Density/"+(i+1)+"_density_"+next.getName();
-			fileTransfer.printDensityCount(densityOutputFile);
+			File next = new File(inputFile);
+			if(controller == 0){
+				// perform file transfer function
+				//String outputFile = "data/output/modified_"+next.getName(); // need to change folder for new data
+				//String outputFile = "data/output/modified_geodesic_"+next.getName();
+				//String outputFile = "data/FourClassHippoBreakOutput/Geodesic/"+(i+1)+"_Geodesic_"+next.getName();
+				String outputFile = "data/Zhao_trees/output_Euclidean/"+(i+1)+"_Euclidean_"+next.getName();	// i+1 is the index of this file
+				//fileTransfer = new GeodesicFileTransfer(inputFile);
+				fileTransfer.ChangeFileFormat(outputFile);
+			}else if(controller == 1){
+				// perform density count function
+				String densityOutputFile = "data/Zhao_trees/output_Density/"+(i+1)+"_density_"+next.getName();
+				fileTransfer.printDensityCount(densityOutputFile);
+			}
 		}
 	}
 }

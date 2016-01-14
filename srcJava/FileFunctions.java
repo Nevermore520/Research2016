@@ -59,7 +59,7 @@ public class FileFunctions {
 				String queryName = fileNames.get(i);
 				String className = queryName.substring(0, queryName.lastIndexOf("\\"));
 				//String fileName = queryName.substring(0, queryName.lastIndexOf("\\")+1);
-				//TODO class count is not correct
+				//TODO class count is not correct, fixed now 1/13/2016
 				if(!misclassified.containsKey(className)){
 					misclassified.put(className, 1);
 				}else{
