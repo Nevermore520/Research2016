@@ -127,9 +127,9 @@ bool ParseCommand(int argc, char **argv, std::string &fileName1, std::string &fi
  */
 void getFiles( string path, string exd, vector<string>& files )
 {
-	//文件句柄
+
 	long   hFile   =   0;
-	//文件信息
+
 	struct _finddata_t fileinfo;
 	string pathName, exdName;
 
@@ -146,8 +146,7 @@ void getFiles( string path, string exd, vector<string>& files )
 	{
 		do
 		{
-			//如果是文件夹中仍有文件夹,迭代之
-			//如果不是,加入列表
+
 			if((fileinfo.attrib &  _A_SUBDIR))
 			{
 				if(strcmp(fileinfo.name,".") != 0  &&  strcmp(fileinfo.name,"..") != 0)
@@ -202,7 +201,11 @@ int getIndex(string fileName){
 	int index = atoi(name.substr(0,underscoreIndex).c_str());
 	return index;
 }
-
+/**
+ *  This function compute the distance matrix among all the neurons
+ *
+ *  Input is the array of neuron files
+ */
 vector<vector<double> > computeDistanceMatrix(vector<string> files){
 	vector<vector<double> > distanceMat;
 		unsigned int fileNum = files.size();
@@ -278,7 +281,7 @@ vector<vector<double> > computeDistanceMatrix(vector<string> files){
 				ifs.clear();
 				//computing persistence-distortion distance, this return the bottleneck distance
 				double result;
-				result = ga.computePersistenceDistortionDistance(gb, fileResult);
+				result = ga.computePersistenceDistortionDistance(gb, fileResult);	// this function computes distance between two neuron trees. If you only need to compare distance between two neuron trees, then this is the right one. Second parameter has no usage here.
 				distanceMat[i][j] = result;
 				distanceMat[j][i] = result;
 			}
@@ -1075,15 +1078,15 @@ int main(int argc, char **argv){
 	getNearestKNeighbor(EDoutput_KNN,ZhaoEuclideanNNCoutput, 10);
 */
 
-	string ZhaoEuclideanPath = "data/Zhao_trees/output_Euclidean";
-	string ZhaoEuclideanOutput_dBMax_Linfty = "data/Zhao_trees/output/zhao_trees_dBMax_deltaLinfty_Personly_Euclidean.txt"; //SUM/dBSum_deltaLinfty_Personly_Euclidean.txt
-	string ZhaoEuclideanOutput_dBMax_l1 = "data/Zhao_trees/output/zhao_trees_dBMax_deltaL1_Personly_Euclidean.txt";
-	//getDistanceMatrixFixIndex(ZhaoEuclideanPath,ZhaoEuclideanOutput_dBMax_l1);
+	string ZhaoEuclideanPath = "data/Zhao_trees/output_Euclidean";	//this folder contains all the neuron files(obtained from the Java program) that need to be compared
+	string ZhaoEuclideanOutput_dBMax_Linfty = "data/Zhao_trees/output/zhao_trees_dBMax_deltaLinfty_Personly_Euclidean.txt"; 	// this file is the output distance matrix
+	string ZhaoEuclideanOutput_dBMax_l1 = "data/Zhao_trees/output/zhao_trees_dBMax_deltaL1_Personly_Euclidean.txt";		// this file is the output distance matrix
+	getDistanceMatrixFixIndex(ZhaoEuclideanPath,ZhaoEuclideanOutput_dBMax_l1);	// call this function first before any other functions to get the distance matrix
 
 	string outputFileDiameter = "data/Zhao_trees/output/zhao_trees_DiameterMat.txt";
 
 	string EDoutput = "data/Zhao_trees/output/zhao_trees_dBMax_deltaLinfty_combMax.txt";
-	combineDistMatTakeMax(outputFileDiameter,ZhaoEuclideanOutput_dBMax_Linfty, EDoutput);
+	combineDistMatTakeMax(outputFileDiameter,ZhaoEuclideanOutput_dBMax_Linfty, EDoutput);	//this funtion com
 	EDoutput = "data/Zhao_trees/output/zhao_trees_dBMax_deltaL1_combMax.txt";
 	combineDistMatTakeMax(outputFileDiameter,ZhaoEuclideanOutput_dBMax_l1, EDoutput);
 	EDoutput = "data/Zhao_trees/output/zhao_trees_dBMax_deltaLinfty_combSum.txt";
@@ -1091,6 +1094,7 @@ int main(int argc, char **argv){
 	EDoutput = "data/Zhao_trees/output/zhao_trees_dBMax_deltaL1_combSum.txt";
 	combineDistMatAddUp(outputFileDiameter,ZhaoEuclideanOutput_dBMax_l1,EDoutput);
 
+	/*
 	string ZhaoEuclideanNNCoutput = "data/Zhao_trees/output/dBMax_deltaLinfty_combMax_Euclidean_euclideanNNC_5NN.txt";
 	string EDoutput_KNN = "data/Zhao_trees/output/zhao_trees_dBMax_deltaLinfty_combMax.txt";
 	getNearestKNeighbor(EDoutput_KNN,ZhaoEuclideanNNCoutput, 5);
@@ -1116,4 +1120,5 @@ int main(int argc, char **argv){
 	ZhaoEuclideanNNCoutput = "data/Zhao_trees/output/dBMax_deltaL1_combSum_Euclidean_euclideanNNC_10NN.txt";
 	EDoutput_KNN = "data/Zhao_trees/output/zhao_trees_dBMax_deltaL1_combSum.txt";
 	getNearestKNeighbor(EDoutput_KNN,ZhaoEuclideanNNCoutput, 10);
+	*/
 }
