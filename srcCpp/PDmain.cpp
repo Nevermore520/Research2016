@@ -201,6 +201,69 @@ int getIndex(string fileName){
 	int index = atoi(name.substr(0,underscoreIndex).c_str());
 	return index;
 }
+
+vector<string> getFixIndexFiles(vector<string> files){
+	vector<string> filesFixIndex;
+	filesFixIndex.resize(files.size());
+	for(unsigned int i=0;i<files.size();i++){
+		string next = files[i];
+		int index = getIndex(next);
+		filesFixIndex[index-1] = next;
+	}
+	for(size_t i=0;i<files.size();i++){
+		cout<<filesFixIndex[i]<<endl;
+	}
+	return filesFixIndex;
+}
+
+vector<vector<double> > computeDensityCountDistanceMatrix(vector<string> files){
+	// TODO need to test this function
+	vector<vector<double> > distanceMat;
+	unsigned int fileNum = files.size();
+	distanceMat.resize(fileNum);
+	for (size_t i = 0; i < fileNum; ++i){
+		distanceMat[i].resize(fileNum);
+	}
+
+	vector<double> integral;
+	integral.resize(files.size());
+	for(int i=0;i<files.size();i++){
+		std::ifstream ifs;
+		string fileName = files[i];
+		int count = 0;
+		double distance = 0, nextDistance;
+		int density = 0, nextDensity;
+		double sum = 0;
+		ifs.open(fileName.c_str());
+		ifs >> count;
+		while(count--){
+			ifs >> nextDistance >> nextDensity;
+			sum+=(nextDistance-distance) * density;
+			distance = nextDistance;
+			density = nextDensity;
+		}
+		ifs.close();
+		ifs.clear();
+		integral[i] = sum;
+	}
+
+	for(int i=0;i<files.size();i++){
+		for(int j = 0;j<files.size();j++){
+			distanceMat[i][j] = abs(integral[i]-integral[j]);
+		}
+	}
+	return distanceMat;
+}
+
+void getDensityCountDistanceMatrixFixIndex(string filePath, string outputFile){
+	//file name start with its index eg. 12_name.swc, this index start from 1
+	vector<string> files;
+	getFiles(filePath, "swc", files);
+	vector<string> filesFixIndex = getFixIndexFiles(files);
+	vector<vector<double> > distanceMat = computeDensityCountDistanceMatrix(filesFixIndex);
+	printMat(outputFile,distanceMat);
+}
+
 /**
  *  This function compute the distance matrix among all the neurons
  *
@@ -289,19 +352,6 @@ vector<vector<double> > computeDistanceMatrix(vector<string> files){
 		return distanceMat;
 }
 
-vector<string> getFixIndexFiles(vector<string> files){
-	vector<string> filesFixIndex;
-	filesFixIndex.resize(files.size());
-	for(unsigned int i=0;i<files.size();i++){
-		string next = files[i];
-		int index = getIndex(next);
-		filesFixIndex[index-1] = next;
-	}
-	for(size_t i=0;i<files.size();i++){
-		cout<<filesFixIndex[i]<<endl;
-	}
-	return filesFixIndex;
-}
 
 void getDistanceMatrixFixIndex(string filePath, string outputFile){
 
@@ -1078,6 +1128,7 @@ int main(int argc, char **argv){
 	getNearestKNeighbor(EDoutput_KNN,ZhaoEuclideanNNCoutput, 10);
 */
 
+	/* 01/16/2016
 	string ZhaoEuclideanPath = "data/Zhao_trees/output_Euclidean";	//this folder contains all the neuron files(obtained from the Java program) that need to be compared
 	string ZhaoEuclideanOutput_dBMax_Linfty = "data/Zhao_trees/output/zhao_trees_dBMax_deltaLinfty_Personly_Euclidean.txt"; 	// this file is the output distance matrix
 	string ZhaoEuclideanOutput_dBMax_l1 = "data/Zhao_trees/output/zhao_trees_dBMax_deltaL1_Personly_Euclidean.txt";		// this file is the output distance matrix
@@ -1093,6 +1144,7 @@ int main(int argc, char **argv){
 	combineDistMatAddUp(outputFileDiameter,ZhaoEuclideanOutput_dBMax_Linfty,EDoutput);
 	EDoutput = "data/Zhao_trees/output/zhao_trees_dBMax_deltaL1_combSum.txt";
 	combineDistMatAddUp(outputFileDiameter,ZhaoEuclideanOutput_dBMax_l1,EDoutput);
+	*/
 
 	/*
 	string ZhaoEuclideanNNCoutput = "data/Zhao_trees/output/dBMax_deltaLinfty_combMax_Euclidean_euclideanNNC_5NN.txt";
@@ -1121,4 +1173,10 @@ int main(int argc, char **argv){
 	EDoutput_KNN = "data/Zhao_trees/output/zhao_trees_dBMax_deltaL1_combSum.txt";
 	getNearestKNeighbor(EDoutput_KNN,ZhaoEuclideanNNCoutput, 10);
 	*/
+
+
+	// Run density count difference matrix function
+	string densityCountPath = "data/Zhao_trees/output_Density";
+	string densityCountDiffMatFile = "data/Zhao_trees/output/densityCountDiffMat.txt";
+	getDensityCountDistanceMatrixFixIndex(densityCountPath, densityCountDiffMatFile);
 }
