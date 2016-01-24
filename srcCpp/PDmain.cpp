@@ -1,6 +1,8 @@
 #include "Graph.h"
 #include <boost/program_options.hpp>
 #include <string>
+#include "FileFun.h"
+#include "DensityCount.h"
 
 using namespace std;
 
@@ -122,147 +124,6 @@ bool ParseCommand(int argc, char **argv, std::string &fileName1, std::string &fi
 }
 */
 
-/*
- *get all file names with path from {path}. and save them to {files}. exd is the file extension (.txt, .swc)
- */
-void getFiles( string path, string exd, vector<string>& files )
-{
-
-	long   hFile   =   0;
-
-	struct _finddata_t fileinfo;
-	string pathName, exdName;
-
-	if (0 != strcmp(exd.c_str(), ""))
-	{
-		exdName = "\\*." + exd;
-	}
-	else
-	{
-		exdName = "\\*";
-	}
-
-	if((hFile = _findfirst(pathName.assign(path).append(exdName).c_str(),&fileinfo)) !=  -1)
-	{
-		do
-		{
-
-			if((fileinfo.attrib &  _A_SUBDIR))
-			{
-				if(strcmp(fileinfo.name,".") != 0  &&  strcmp(fileinfo.name,"..") != 0)
-					getFiles( pathName.assign(path).append("\\").append(fileinfo.name), exd, files );
-			}
-			else
-			{
-				if(strcmp(fileinfo.name,".") != 0  &&  strcmp(fileinfo.name,"..") != 0)
-					files.push_back(pathName.assign(path).append("\\").append(fileinfo.name));
-			}
-		}while(_findnext(hFile, &fileinfo)  == 0);
-		_findclose(hFile);
-	}
-}
-
-void printMat(string outputFile, vector<vector<double> > &distanceMat){
-	size_t rows = distanceMat.size();
-	if(rows==0){
-		return;
-	}
-	size_t columns = distanceMat[0].size();
-	std::ofstream ofs;
-	ofs.open(outputFile.c_str());
-	ofs<<rows<<" "<<columns<<"\n";
-	for(size_t i=0;i<rows;i++){
-		for(size_t j=0;j<columns;j++){
-			ofs<<distanceMat[i][j]<<" ";
-		}
-		ofs<<"\n";
-	}
-	ofs.close();
-	ofs.clear();
-}
-
-void appendMatToFile(string outputFile, vector<vector<double> > &distanceMat){
-	int rows = distanceMat.size();
-	int columns = distanceMat[0].size();
-	std::ofstream ofs;
-	ofs.open(outputFile.c_str(),ios::app);
-	for(unsigned int i=0;i<rows;i++){
-		for(unsigned int j = 0;j<columns;j++){
-			ofs<<distanceMat[i][j]<<" ";
-		}
-		ofs<<"\n";
-	}
-}
-
-int getIndex(string fileName){
-	int slashIndex = fileName.find_last_of('\\');
-	string name = fileName.substr(slashIndex+1);
-	int underscoreIndex = name.find_first_of('_');
-	int index = atoi(name.substr(0,underscoreIndex).c_str());
-	return index;
-}
-
-vector<string> getFixIndexFiles(vector<string> files){
-	vector<string> filesFixIndex;
-	filesFixIndex.resize(files.size());
-	for(unsigned int i=0;i<files.size();i++){
-		string next = files[i];
-		int index = getIndex(next);
-		filesFixIndex[index-1] = next;
-	}
-	for(size_t i=0;i<files.size();i++){
-		cout<<filesFixIndex[i]<<endl;
-	}
-	return filesFixIndex;
-}
-
-vector<vector<double> > computeDensityCountDistanceMatrix(vector<string> files){
-	// TODO need to test this function
-	vector<vector<double> > distanceMat;
-	unsigned int fileNum = files.size();
-	distanceMat.resize(fileNum);
-	for (size_t i = 0; i < fileNum; ++i){
-		distanceMat[i].resize(fileNum);
-	}
-
-	vector<double> integral;
-	integral.resize(files.size());
-	for(int i=0;i<files.size();i++){
-		std::ifstream ifs;
-		string fileName = files[i];
-		int count = 0;
-		double distance = 0, nextDistance;
-		int density = 0, nextDensity;
-		double sum = 0;
-		ifs.open(fileName.c_str());
-		ifs >> count;
-		while(count--){
-			ifs >> nextDistance >> nextDensity;
-			sum+=(nextDistance-distance) * density;
-			distance = nextDistance;
-			density = nextDensity;
-		}
-		ifs.close();
-		ifs.clear();
-		integral[i] = sum;
-	}
-
-	for(int i=0;i<files.size();i++){
-		for(int j = 0;j<files.size();j++){
-			distanceMat[i][j] = abs(integral[i]-integral[j]);
-		}
-	}
-	return distanceMat;
-}
-
-void getDensityCountDistanceMatrixFixIndex(string filePath, string outputFile){
-	//file name start with its index eg. 12_name.swc, this index start from 1
-	vector<string> files;
-	getFiles(filePath, "swc", files);
-	vector<string> filesFixIndex = getFixIndexFiles(files);
-	vector<vector<double> > distanceMat = computeDensityCountDistanceMatrix(filesFixIndex);
-	printMat(outputFile,distanceMat);
-}
 
 /**
  *  This function compute the distance matrix among all the neurons
@@ -387,26 +248,6 @@ void getDistanceMatrix(string filePath, string outputFile){
 	ofs.clear();
 }
 
-void readMat(string fileName,vector<vector<double> > &distanceMat){
-	std::ifstream ifs;
-	ifs.open(fileName.c_str());
-	unsigned int size;
-	ifs>>size;
-	ifs>>size;
-	distanceMat.resize(size);
-	for (size_t i = 0; i < size; ++i){
-		distanceMat[i].resize(size);
-	}
-	double next;
-	for(size_t i = 0;i<size;i++){
-		for(size_t j = 0;j<size;j++){
-			ifs>>next;
-			distanceMat[i][j] = next;
-		}
-	}
-	ifs.close();
-	ifs.clear();
-}
 void findMidPoint(vector<vector<double> > &distanceMat, int &midIndex){
 	//find the index of tree that has the minimum average distance to all the other trees.
 	midIndex = 0;
@@ -854,8 +695,51 @@ void combineDistMatAddUp(string matFile1, string matFile2, string outputFile){
 	printMat(outputFile,matSum);
 }
 
-int main_for_Giogio_data(int argc, char **argv)
+
+
+void getNearestKNeighbor(string input, string output, int k){
+	vector<vector<double> > distanceMat;
+	readMat(input,distanceMat);
+	vector<vector<int> > nearestNeighbor;
+	nearestNeighbor.resize(distanceMat.size());
+	for(size_t i = 0; i < distanceMat.size();i++){
+		nearestNeighbor[i].resize(k);
+	}
+	for(size_t i = 0; i<distanceMat.size();i++){
+		std::priority_queue<myNN_pair, vector<myNN_pair> > pq;
+		double min = 0;
+		for(size_t j = 0; j<distanceMat.size();j++){
+			if(j == i) continue;
+			pq.push(std::pair<double, int>(distanceMat[i][j], j+1));// file index start from 1.
+			if(pq.size()>k) {
+				if(min>pq.top().first) cout<<"test"<<endl;
+				pq.pop();
+			}
+		}
+		for(size_t j = 0;j<k&&pq.size()>0;j++){
+			nearestNeighbor[i][j] = pq.top().second;
+			pq.pop();
+		}
+	}
+	std::ofstream ofs;
+	ofs.open(output.c_str());
+	for(size_t i=0;i<nearestNeighbor.size();i++){
+		for(size_t j = 0;j<k;j++){
+			ofs<<nearestNeighbor[i][j]<<" ";
+		}
+		ofs<<"\n";
+	}
+	ofs.close();
+	ofs.clear();
+}
+
+void getNearestNeighbor(string input, string output){
+	getNearestKNeighbor(input, output, 1);
+}
+
+int main(int argc, char **argv)
 {
+/*
 	cout<<"run max version"<<endl;
 	string euclideanFilePath = "data/ResearchData/Euclidean";
 	string outputFile = "data/output/euclideanDistanceMat_MaxXY.txt";
@@ -882,7 +766,7 @@ int main_for_Giogio_data(int argc, char **argv)
 	//sortCombineDistMatTakeMax(outputFileDiameter, euclideanFile, diameterEuclideanMax);
 
 	string diameterEuclideanMaxWithoutSort = "data/output/combineDiameterEuclideanMaxWithoutSort_MaxXY.txt";
-	//combineDistMatTakeMax(outputFileDiameter,euclideanFile, diameterEuclideanMaxWithoutSort);
+	//combineDistMatTakeMax(outputFileDiameter,euclideanFile, diameterEuclideanMaxWithoutSort);	 */
 /*
 	//4 class neural trees//
 	string HBfourClassEuclideanPath = "data/ResearchData/FourClassHippoBreak/Euclidean";
@@ -935,7 +819,7 @@ int main_for_Giogio_data(int argc, char **argv)
 
 
 
-
+/*
 	//4 class neural trees//
 		string fourClassEuclideanPath = "data/ResearchData/FourClass/Euclidean";
 		string fourClassGeodesicPath = "data/ResearchData/FourClass/Geodesic";
@@ -958,50 +842,47 @@ int main_for_Giogio_data(int argc, char **argv)
 		fourClassEuclideanFile = "data/output_SUM_FourClass/dBSum_deltaL1_Personly_Euclidean.txt";
 		EDoutput = "data/output_SUM_FourClass/dBSum_deltaL1_combSum.txt";
 		combineDistMatAddUp(outputFileDiameter,fourClassEuclideanFile,EDoutput);
+*/
+
+// run KNN method on Giogio data. 01/16/2016
+	// TODO run it
+	string GiogioEuclideanPath = "data/GiogioResearchData/FourClassHippoBreak/Euclidean";
+	string GiogioEuclideanOutput_dBSum_Linfty = "data/GiogioResearchData/FourClassHippoBreak/output_DistMat/dBSum_deltaLinfty_Personly_Euclidean.txt";
+	string GiogioEuclideanOutput_dBSum_L1 = "data/GiogioResearchData/FourClassHippoBreak/output_DistMat/dBSum_deltaL1_Personly_Euclidean.txt";
+	//getDistanceMatrixFixIndex(GiogioEuclideanPath,GiogioEuclideanOutput_dBSum_Linfty);
+	//getDistanceMatrixFixIndex(GiogioEuclideanPath,GiogioEuclideanOutput_dBSum_L1);
+
+	string outputFileDiameter = "data/GiogioResearchData/FourClassHippoBreak/output_DistMat/giogio_trees_DiameterMat.txt";
+	//getDiameterDistMat(GiogioEuclideanPath, outputFileDiameter);
+
+	string EDoutput = "data/GiogioResearchData/FourClassHippoBreak/output_DistMat/giogio_trees_dBSum_deltaLinfty_combMax.txt";
+	combineDistMatTakeMax(outputFileDiameter,GiogioEuclideanOutput_dBSum_Linfty, EDoutput);
+	EDoutput = "data/GiogioResearchData/FourClassHippoBreak/output_DistMat/giogio_trees_dBSum_deltaL1_combMax.txt";
+	combineDistMatTakeMax(outputFileDiameter,GiogioEuclideanOutput_dBSum_L1, EDoutput);
+	EDoutput = "data/GiogioResearchData/FourClassHippoBreak/output_DistMat/giogio_trees_dBSum_deltaLinfty_combSum.txt";
+	combineDistMatAddUp(outputFileDiameter,GiogioEuclideanOutput_dBSum_Linfty,EDoutput);
+	EDoutput = "data/GiogioResearchData/FourClassHippoBreak/output_DistMat/giogio_trees_dBSum_deltaL1_combSum.txt";
+	combineDistMatAddUp(outputFileDiameter,GiogioEuclideanOutput_dBSum_L1,EDoutput);
+
+	string GiogioEuclideanNNCoutput;
+	string EDoutput_KNN;
+	GiogioEuclideanNNCoutput = "data/GiogioResearchData/FourClassHippoBreak/output_KNN/dBSum_deltaLinfty_combMax_Euclidean_euclideanNNC_2NN.txt";
+	EDoutput_KNN = "data/GiogioResearchData/FourClassHippoBreak/output_DistMat/giogio_trees_dBSum_deltaLinfty_combMax.txt";
+	getNearestKNeighbor(EDoutput_KNN,GiogioEuclideanNNCoutput, 2);
+	GiogioEuclideanNNCoutput = "data/GiogioResearchData/FourClassHippoBreak/output_KNN/dBSum_deltaL1_combMax_Euclidean_euclideanNNC_2NN.txt";
+	EDoutput_KNN = "data/GiogioResearchData/FourClassHippoBreak/output_DistMat/giogio_trees_dBSum_deltaL1_combMax.txt";
+	getNearestKNeighbor(EDoutput_KNN,GiogioEuclideanNNCoutput, 2);
+	GiogioEuclideanNNCoutput = "data/GiogioResearchData/FourClassHippoBreak/output_KNN/dBSum_deltaLinfty_combSum_Euclidean_euclideanNNC_2NN.txt";
+	EDoutput_KNN = "data/GiogioResearchData/FourClassHippoBreak/output_DistMat/giogio_trees_dBSum_deltaLinfty_combSum.txt";
+	getNearestKNeighbor(EDoutput_KNN,GiogioEuclideanNNCoutput, 2);
+	GiogioEuclideanNNCoutput = "data/GiogioResearchData/FourClassHippoBreak/output_KNN/dBSum_deltaL1_combSum_Euclidean_euclideanNNC_2NN.txt";
+	EDoutput_KNN = "data/GiogioResearchData/FourClassHippoBreak/output_DistMat/giogio_trees_dBSum_deltaL1_combSum.txt";
+	getNearestKNeighbor(EDoutput_KNN,GiogioEuclideanNNCoutput, 2);
+
 	return 0;
 }
 
-void getNearestKNeighbor(string input, string output, int k){
-	vector<vector<double> > distanceMat;
-	readMat(input,distanceMat);
-	vector<vector<int> > nearestNeighbor;
-	nearestNeighbor.resize(distanceMat.size());
-	for(size_t i = 0; i < distanceMat.size();i++){
-		nearestNeighbor[i].resize(k);
-	}
-	for(size_t i = 0; i<distanceMat.size();i++){
-		std::priority_queue<myNN_pair, vector<myNN_pair> > pq;
-		double min = 0;
-		for(size_t j = 0; j<distanceMat.size();j++){
-			if(j == i) continue;
-			pq.push(std::pair<double, int>(distanceMat[i][j], j+1));// file index start from 1.
-			if(pq.size()>k) {
-				if(min>pq.top().first) cout<<"test"<<endl;
-				pq.pop();
-			}
-		}
-		for(size_t j = 0;j<k&&pq.size()>0;j++){
-			nearestNeighbor[i][j] = pq.top().second;
-			pq.pop();
-		}
-	}
-	std::ofstream ofs;
-	ofs.open(output.c_str());
-	for(size_t i=0;i<nearestNeighbor.size();i++){
-		for(size_t j = 0;j<k;j++){
-			ofs<<nearestNeighbor[i][j]<<" ";
-		}
-		ofs<<"\n";
-	}
-	ofs.close();
-	ofs.clear();
-}
-
-void getNearestNeighbor(string input, string output){
-	getNearestKNeighbor(input, output, 1);
-}
-
-/* build density distance matrix */
+/* build density distance matrix. This is step by step version (old one, not in use!) ---- 01/16/2016*/
 vector<pair<double, int> > getDensityCurve(string inputFile){
 	std::ifstream ifs;
 	ifs.open(inputFile.c_str());
@@ -1077,9 +958,9 @@ void getDensityDistanceMatrixFixIndex(string filePath, string outputFile){
 	vector<vector<double> > distanceMat = computeDensityDistanceMatrix(filesFixIndex);
 	printMat(outputFile,distanceMat);
 }
-/* end build density distance matrix */
+/* end build density distance matrix. step by step version (old one) */
 
-int main(int argc, char **argv){
+int main_for_zhao_trees(int argc, char **argv){
 /*
 	string ZhaoEuclideanPath = "data/Zhao_trees/output_Euclidean";
 	string ZhaoEuclideanOutput_dBSum_Linfty = "data/Zhao_trees/output/dBSum_deltaLinfty_Personly_Euclidean.txt"; //SUM/dBSum_deltaLinfty_Personly_Euclidean.txt

@@ -1,3 +1,6 @@
+#ifndef GRAPH_H_
+#define GRAPH_H_
+
 #include <stdio.h>
 #include <string.h>
 #include <vector>
@@ -9,7 +12,8 @@
 #include <sstream>
 #include <string>
 #include <time.h>
-#include <math.h>
+#include <cmath>
+//#include <math.h>
 #include <iomanip>      //std::setprecision
 #include <boost/heap/fibonacci_heap.hpp>
 #include <io.h>
@@ -26,7 +30,7 @@
 #define BNORMALIZE false //control normalization
 #define CUTOFF 0		//control cutoff value
 #define B_ONE_RING_NEIGHBOR true
-#define B_SUMMER_BN false // true is sum version
+#define B_SUMMER_BN true // true is sum version
 
 #define cell      double
 
@@ -214,3 +218,5 @@ public:
 	//compute PD distance
 	double computePersistenceDistortionDistance(Graph& g2, string& fileResult);
 };
+
+#endif /* GRAPH_H_ */
