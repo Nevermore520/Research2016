@@ -17,11 +17,11 @@ public class Main {
 		//			while {EuclideanFileTransfer} will compute the distance using Euclidean distance.
 		//		4.run this java program
 		List<String> fileNames = new LinkedList<String>();
-		final File folder = new File("data/Zhao_trees/All_Cells"); //need to change folder for new data
+		final File folder = new File("data/Giorgio_trees reclassed version/Original_data/"); //need to change folder for new data
 		FileFunctions.listFilesForFolder(folder,fileNames);
 		System.out.println(fileNames.size()+" files read.");
 		FileTransfer fileTransfer;
-		int controller = 1;
+		int controller = 0;
 		for(int i=0;i<fileNames.size();i++){
 			System.out.println("process file: "+fileNames.get(i));
 			String inputFile = fileNames.get(i);
@@ -32,7 +32,8 @@ public class Main {
 				//String outputFile = "data/output/modified_"+next.getName(); // need to change folder for new data
 				//String outputFile = "data/output/modified_geodesic_"+next.getName();
 				//String outputFile = "data/FourClassHippoBreakOutput/Geodesic/"+(i+1)+"_Geodesic_"+next.getName();
-				String outputFile = "data/Zhao_trees/output_Euclidean/"+(i+1)+"_Euclidean_"+next.getName();	// i+1 is the index of this file
+				//String outputFile = "data/Zhao_trees/output_Euclidean/"+(i+1)+"_Euclidean_"+next.getName();	// i+1 is the index of this file
+				String outputFile = "data/Giorgio_trees reclassed version/transfered_data/"+(i+1)+"_Euclidean_"+next.getName();	// i+1 is the index of this file
 				//fileTransfer = new GeodesicFileTransfer(inputFile);
 				fileTransfer.ChangeFileFormat(outputFile);
 			}else if(controller == 1){

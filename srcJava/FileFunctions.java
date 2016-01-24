@@ -15,10 +15,13 @@ import java.util.Scanner;
 public class FileFunctions {
 	
 	public static void main(String[] args) throws FileNotFoundException, UnsupportedEncodingException{
-		String fileFolder = "data/Zhao_trees/All_Cells";
-		String NNCfile = "data/Zhao_trees/output/dBSum_deltaLinfty_combSum_Euclidean_euclideanNNC_10NN.txt";
-		String resultFile = "data/Zhao_trees/output/classifyResult.txt";
-		FileFunctions.validateSameDirectory(fileFolder, NNCfile, resultFile);
+		//String fileFolder = "data/Zhao_trees/All_Cells";
+		//String NNCfile = "data/Zhao_trees/output/dBSum_deltaLinfty_combSum_Euclidean_euclideanNNC_10NN.txt";
+		//String resultFile = "data/Zhao_trees/output/classifyResult.txt";
+		String fileFolder = "data/FourClassDataHippoBreak";//"data/Zhao_trees/All_Cells";
+		String NNCfile = "data/FourClassHippoBreakOutput/output_KNN/dBSum_deltaLinfty_combSum_Euclidean_euclideanNNC_10NN.txt";//"data/Zhao_trees/output/dBSum_deltaLinfty_combSum_Euclidean_euclideanNNC_10NN.txt";
+		String resultFile = "data/FourClassHippoBreakOutput/classifyResult.txt";//"data/Zhao_trees/output/classifyResult.txt";
+		FileFunctions.validateSameDirectory(fileFolder, NNCfile, resultFile);	
 	}
 	
 	public static void validateSameDirectory(String fileFolder, String input, String output) throws FileNotFoundException, UnsupportedEncodingException{
@@ -29,7 +32,7 @@ public class FileFunctions {
 		List<List<Integer>> nearestNeighborIndex = FileFunctions.readKNNList(input); // index start from 1
 		
 		//use map to save class name
-		Map<String, Integer> classMap = new HashMap<String, Integer>();
+		Map<String, Integer> classMap = new HashMap<String, Integer>(); // <class name, class size> pair
 		//Map<String, String> nameFolder = new HashMap<String, String>();
 		for(int i=0;i<fileNames.size();i++){
 			String queryName = fileNames.get(i);
@@ -67,11 +70,6 @@ public class FileFunctions {
 				}
 			}
 		}
-		int sum = 0;
-		for(int i=0;i<sameClass.length;i++){
-			sum+=sameClass[i]>0?1:0;
-		}
-		System.out.println(sum+"/"+sameClass.length);
 		printList(sameClass, output);
 		
 		//print misclassified
@@ -83,11 +81,25 @@ public class FileFunctions {
 		}
 		System.out.println("Statistics:");
 		System.out.println("class size\tmisclassified count");
+		int countLess = 0;
+		int boundary = 0;
 		for(int i=0;i<bucket.length;i++){
 			if(bucket[i]>0){
 				System.out.println(i+"\t\t"+bucket[i]);
 			}
+			if(i<boundary) countLess += bucket[i];
 		}
+		// TODO check first to make sure whether to include small size classes!!! Use countLess & boundary var
+		int sum = 0;
+		for(int i=0;i<sameClass.length;i++){
+			sum+=sameClass[i]>0?1:0;
+		}
+		sum-=countLess;
+		int total = 0; //compute total number of trees that are in class with size >= 5
+		for(Map.Entry<String, Integer> entry: classMap.entrySet()){
+			if(entry.getValue()>=boundary) total+=entry.getValue();
+		}
+		System.out.println(sum+"/"+total);
 		
 	}
 	
